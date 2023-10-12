@@ -98,7 +98,7 @@ func CreateHandler(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	if err := client.Create(context.Background(), &request, fn); err != nil {
+	if err := client.Create(cmd.Context(), &request, fn); err != nil {
 		return err
 	}
 
@@ -118,7 +118,7 @@ func RunHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	models, err := client.List(context.Background())
+	models, err := client.List(cmd.Context())
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func PushHandler(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	if err := client.Push(context.Background(), &request, fn); err != nil {
+	if err := client.Push(cmd.Context(), &request, fn); err != nil {
 		return err
 	}
 
@@ -187,7 +187,7 @@ func ListHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	models, err := client.List(context.Background())
+	models, err := client.List(cmd.Context())
 	if err != nil {
 		return err
 	}
@@ -222,7 +222,7 @@ func DeleteHandler(cmd *cobra.Command, args []string) error {
 
 	for _, name := range args {
 		req := api.DeleteRequest{Name: name}
-		if err := client.Delete(context.Background(), &req); err != nil {
+		if err := client.Delete(cmd.Context(), &req); err != nil {
 			return err
 		}
 		fmt.Printf("deleted '%s'\n", name)
@@ -287,7 +287,7 @@ func ShowHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	req := api.ShowRequest{Name: args[0]}
-	resp, err := client.Show(context.Background(), &req)
+	resp, err := client.Show(cmd.Context(), &req)
 	if err != nil {
 		return err
 	}
@@ -315,7 +315,7 @@ func CopyHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	req := api.CopyRequest{Source: args[0], Destination: args[1]}
-	if err := client.Copy(context.Background(), &req); err != nil {
+	if err := client.Copy(cmd.Context(), &req); err != nil {
 		return err
 	}
 	fmt.Printf("copied '%s' to '%s'\n", args[0], args[1])
@@ -328,10 +328,6 @@ func PullHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return pull(args[0], insecure)
-}
-
-func pull(model string, insecure bool) error {
 	client, err := api.ClientFromEnvironment()
 	if err != nil {
 		return err
@@ -340,7 +336,7 @@ func pull(model string, insecure bool) error {
 	var currentDigest string
 	var bar *progressbar.ProgressBar
 
-	request := api.PullRequest{Name: model, Insecure: insecure}
+	request := api.PullRequest{Name: args[0], Insecure: insecure}
 	fn := func(resp api.ProgressResponse) error {
 		if resp.Digest != currentDigest && resp.Digest != "" {
 			currentDigest = resp.Digest
@@ -360,7 +356,7 @@ func pull(model string, insecure bool) error {
 		return nil
 	}
 
-	if err := client.Pull(context.Background(), &request, fn); err != nil {
+	if err := client.Pull(cmd.Context(), &request, fn); err != nil {
 		return err
 	}
 
@@ -420,7 +416,7 @@ func generate(cmd *cobra.Command, model, prompt string, wordWrap bool) error {
 		wordWrap = false
 	}
 
-	cancelCtx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 
 	sigChan := make(chan os.Signal, 1)
@@ -472,7 +468,7 @@ func generate(cmd *cobra.Command, model, prompt string, wordWrap bool) error {
 		return nil
 	}
 
-	if err := client.Generate(cancelCtx, &request, fn); err != nil {
+	if err := client.Generate(ctx, &request, fn); err != nil {
 		if strings.Contains(err.Error(), "context canceled") && abort {
 			spinner.Finish()
 			return nil
@@ -500,10 +496,7 @@ func generate(cmd *cobra.Command, model, prompt string, wordWrap bool) error {
 		latest.Summary()
 	}
 
-	ctx := cmd.Context()
-	ctx = context.WithValue(ctx, generateContextKey("context"), latest.Context)
-	cmd.SetContext(ctx)
-
+	cmd.SetContext(context.WithValue(cmd.Context(), generateContextKey("context"), latest.Context))
 	return nil
 }
 
@@ -862,7 +855,7 @@ func initializeKeypair() error {
 	return nil
 }
 
-func startMacApp(client *api.Client) error {
+func startMacApp(ctx context.Context, client *api.Client) error {
 	exe, err := os.Executable()
 	if err != nil {
 		return err
@@ -886,24 +879,24 @@ func startMacApp(client *api.Client) error {
 		case <-timeout:
 			return errors.New("timed out waiting for server to start")
 		case <-tick:
-			if err := client.Heartbeat(context.Background()); err == nil {
+			if err := client.Heartbeat(ctx); err == nil {
 				return nil // server has started
 			}
 		}
 	}
 }
 
-func checkServerHeartbeat(_ *cobra.Command, _ []string) error {
+func checkServerHeartbeat(cmd *cobra.Command, _ []string) error {
 	client, err := api.ClientFromEnvironment()
 	if err != nil {
 		return err
 	}
-	if err := client.Heartbeat(context.Background()); err != nil {
+	if err := client.Heartbeat(cmd.Context()); err != nil {
 		if !strings.Contains(err.Error(), "connection refused") {
 			return err
 		}
 		if runtime.GOOS == "darwin" {
-			if err := startMacApp(client); err != nil {
+			if err := startMacApp(cmd.Context(), client); err != nil {
 				return fmt.Errorf("could not connect to ollama app, is it running?")
 			}
 		} else {
