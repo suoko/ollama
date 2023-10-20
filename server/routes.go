@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -11,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"reflect"
@@ -674,7 +676,11 @@ func Serve(ln net.Listener, allowOrigins []string) error {
 
 	if runtime.GOOS == "linux" {
 		// check compatibility to log warnings
-		if _, err := llm.CheckVRAM(); err != nil {
+		cmd := exec.Command("nvidia-smi", "--query-gpu=memory.free", "--format=csv,noheader,nounits")
+		var stdout bytes.Buffer
+		cmd.Stdout = &stdout
+		err := cmd.Run()
+		if err != nil {
 			log.Printf("Warning: GPU support may not enabled, check you have installed install GPU drivers: %v", err)
 		}
 	}
