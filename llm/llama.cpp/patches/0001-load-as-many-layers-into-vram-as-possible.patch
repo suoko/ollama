@@ -1,6 +1,6 @@
-From 77b5f7c4e009abe1840fb034b97144549c383d33 Mon Sep 17 00:00:00 2001
+From b4a5ba5e5e52baf7a28c0317beea5a50a99cb80a Mon Sep 17 00:00:00 2001
 From: Bruce MacDonald <brucewmacdonald@gmail.com>
-Date: Fri, 20 Oct 2023 15:26:02 -0400
+Date: Fri, 20 Oct 2023 15:33:07 -0400
 Subject: [PATCH] load as many layers into vram as possible
 
 ---
@@ -33,7 +33,7 @@ index 3e4b8a8..97c703e 100644
          llama_decode(lctx, llama_batch_get_one(tmp.data(), std::min(tmp.size(), (size_t) params.n_batch), 0, 0));
          llama_kv_cache_tokens_rm(lctx, -1, -1);
 diff --git a/llama.cpp b/llama.cpp
-index 82b7638..c9ee302 100644
+index 82b7638..a2b496b 100644
 --- a/llama.cpp
 +++ b/llama.cpp
 @@ -59,11 +59,13 @@
@@ -105,7 +105,7 @@ index 82b7638..c9ee302 100644
 +                        #ifdef __linux__
 +                        try {
 +                            free_bytes = check_vram();
-+                            LLAMA_LOG_INFO("free vram %lla MB\n", free_bytes / 1024.0 / 1024.0);
++                            LLAMA_LOG_INFO("free vram %f MB\n", free_bytes / 1024.0 / 1024.0);
 +                        } catch (const std::exception& e) {
 +                            if (std::string(e.what()) != "failed to run nvidia-smi command") {
 +                                std::cerr << e.what() << std::endl;
