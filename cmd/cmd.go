@@ -28,6 +28,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/jmorganca/ollama/api"
+	"github.com/jmorganca/ollama/config"
 	"github.com/jmorganca/ollama/format"
 	"github.com/jmorganca/ollama/progressbar"
 	"github.com/jmorganca/ollama/server"
@@ -508,7 +509,7 @@ func generate(cmd *cobra.Command, model, prompt string, wordWrap bool) error {
 }
 
 func generateInteractive(cmd *cobra.Command, model string) error {
-	home, err := os.UserHomeDir()
+	home, err := config.OllamaHome()
 	if err != nil {
 		return err
 	}
@@ -577,7 +578,7 @@ func generateInteractive(cmd *cobra.Command, model string) error {
 	config := readline.Config{
 		Painter:      &painter,
 		Prompt:       ">>> ",
-		HistoryFile:  filepath.Join(home, ".ollama", "history"),
+		HistoryFile:  filepath.Join(home, "history"),
 		AutoComplete: completer,
 	}
 
@@ -795,7 +796,7 @@ func RunServer(cmd *cobra.Command, _ []string) error {
 		origins = strings.Split(o, ",")
 	}
 
-	if noprune := os.Getenv("OLLAMA_NOPRUNE"); noprune == "" {
+	if !config.IsPruneDisabled() {
 		if err := server.PruneLayers(); err != nil {
 			return err
 		}
@@ -814,13 +815,13 @@ func RunServer(cmd *cobra.Command, _ []string) error {
 }
 
 func initializeKeypair() error {
-	home, err := os.UserHomeDir()
+	home, err := config.OllamaHome()
 	if err != nil {
 		return err
 	}
 
-	privKeyPath := filepath.Join(home, ".ollama", "id_ed25519")
-	pubKeyPath := filepath.Join(home, ".ollama", "id_ed25519.pub")
+	privKeyPath := filepath.Join(home, "id_ed25519")
+	pubKeyPath := filepath.Join(home, "id_ed25519.pub")
 
 	_, err = os.Stat(privKeyPath)
 	if os.IsNotExist(err) {

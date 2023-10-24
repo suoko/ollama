@@ -23,6 +23,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/jmorganca/ollama/api"
+	"github.com/jmorganca/ollama/config"
 	"github.com/jmorganca/ollama/llm"
 	"github.com/jmorganca/ollama/parser"
 	"github.com/jmorganca/ollama/version"
@@ -262,7 +263,7 @@ func CreateModel(ctx context.Context, name string, path string, fn func(resp api
 	// build deleteMap to prune unused layers
 	deleteMap := make(map[string]bool)
 
-	if noprune = os.Getenv("OLLAMA_NOPRUNE"); noprune == "" {
+	if !config.IsPruneDisabled() {
 		manifest, _, err = GetManifest(mp)
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err
@@ -1052,7 +1053,7 @@ func PullModel(ctx context.Context, name string, regOpts *RegistryOptions, fn fu
 	// build deleteMap to prune unused layers
 	deleteMap := make(map[string]bool)
 
-	if noprune = os.Getenv("OLLAMA_NOPRUNE"); noprune == "" {
+	if !config.IsPruneDisabled() {
 		manifest, _, err = GetManifest(mp)
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err

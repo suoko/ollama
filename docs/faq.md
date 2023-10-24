@@ -8,6 +8,8 @@ On macOS:
 cat ~/.ollama/logs/server.log
 ```
 
+If you have set the `OLLAMA_HOME` environment variable, the logs will be written to `$OLLAMA_HOME/logs/server.log`.
+
 On Linux:
 
 ```
@@ -32,3 +34,13 @@ OLLAMA_ORIGINS=http://192.168.1.1:*,https://example.com ollama serve
 
 - macOS: Raw model data is stored under `~/.ollama/models`.
 - Linux: Raw model data is stored under `/usr/share/ollama/.ollama/models`
+
+If you have set the `OLLAMA_HOME` environment variable, the models will be stored under `$OLLAMA_HOME/models`.
+
+## How can I change where Ollama stores files?
+
+Set the `OLLAMA_HOME` environment variable and restart Ollama.
+
+```bash
+export OLLAMA_HOME=/path/to/ollama_home
+```

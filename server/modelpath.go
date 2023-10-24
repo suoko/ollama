@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/jmorganca/ollama/config"
 )
 
 type ModelPath struct {
@@ -86,12 +88,12 @@ func (mp ModelPath) GetShortTagname() string {
 }
 
 func (mp ModelPath) GetManifestPath(createDir bool) (string, error) {
-	home, err := os.UserHomeDir()
+	home, err := config.OllamaHome()
 	if err != nil {
 		return "", err
 	}
 
-	path := filepath.Join(home, ".ollama", "models", "manifests", mp.Registry, mp.Namespace, mp.Repository, mp.Tag)
+	path := filepath.Join(home, "models", "manifests", mp.Registry, mp.Namespace, mp.Repository, mp.Tag)
 	if createDir {
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			return "", err
@@ -109,12 +111,12 @@ func (mp ModelPath) BaseURL() *url.URL {
 }
 
 func GetManifestPath() (string, error) {
-	home, err := os.UserHomeDir()
+	home, err := config.OllamaHome()
 	if err != nil {
 		return "", err
 	}
 
-	path := filepath.Join(home, ".ollama", "models", "manifests")
+	path := filepath.Join(home, "models", "manifests")
 	if err := os.MkdirAll(path, 0o755); err != nil {
 		return "", err
 	}
@@ -123,7 +125,7 @@ func GetManifestPath() (string, error) {
 }
 
 func GetBlobsPath(digest string) (string, error) {
-	home, err := os.UserHomeDir()
+	home, err := config.OllamaHome()
 	if err != nil {
 		return "", err
 	}
@@ -132,7 +134,7 @@ func GetBlobsPath(digest string) (string, error) {
 		digest = strings.ReplaceAll(digest, ":", "-")
 	}
 
-	path := filepath.Join(home, ".ollama", "models", "blobs", digest)
+	path := filepath.Join(home, "models", "blobs", digest)
 	dirPath := filepath.Dir(path)
 	if digest == "" {
 		dirPath = path

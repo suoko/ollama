@@ -22,6 +22,7 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	"github.com/jmorganca/ollama/api"
+	"github.com/jmorganca/ollama/config"
 )
 
 type AuthRedirect struct {
@@ -77,12 +78,12 @@ func getAuthToken(ctx context.Context, redirData AuthRedirect) (string, error) {
 		return "", err
 	}
 
-	home, err := os.UserHomeDir()
+	home, err := config.OllamaHome()
 	if err != nil {
 		return "", err
 	}
 
-	keyPath := filepath.Join(home, ".ollama", "id_ed25519")
+	keyPath := filepath.Join(home, "id_ed25519")
 
 	rawKey, err := os.ReadFile(keyPath)
 	if err != nil {

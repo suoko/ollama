@@ -114,6 +114,8 @@ Publishing models is in early alpha. If you'd like to publish your model to shar
 2. Run `cat ~/.ollama/id_ed25519.pub` to view your Ollama public key. Copy this to the clipboard.
 3. Add your public key to your [Ollama account](https://ollama.ai/settings/keys)
 
+> Note: if you're using a custom `OLLAMA_HOME` directory, your public key will be located at `$OLLAMA_HOME/id_ed25519.pub`.
+
 Next, copy your model to your username's namespace:
 
 ```

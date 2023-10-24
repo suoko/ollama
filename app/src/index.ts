@@ -20,11 +20,13 @@ let welcomeWindow: BrowserWindow | null = null
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 
+let homePath = process.env.OLLAMA_HOME || app.getPath('home') + '/.ollama'
+
 const logger = winston.createLogger({
   transports: [
     new winston.transports.Console(),
     new winston.transports.File({
-      filename: path.join(app.getPath('home'), '.ollama', 'logs', 'server.log'),
+      filename: path.join(homePath, 'logs', 'server.log'),
       maxsize: 1024 * 1024 * 20,
       maxFiles: 5,
     }),
